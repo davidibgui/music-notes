@@ -1,0 +1,14 @@
+# basic-pitch מותקן בנפרד עם --no-deps (כדי לא למשוך TensorFlow הכבד; משתמשים במודל ONNX)
+librosa==0.11.0
+onnxruntime==1.20.1
+numpy<2.3
+scipy
+scikit-learn
+pretty-midi==0.2.10
+mir_eval==0.8.2
+resampy==0.4.2
+soundfile
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+setuptools<81  # resampy צריך pkg_resources

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>תווים</title>
+  <meta name="description" content="מנגנים או מעלים שיר - ומקבלים תווים, אקורדים וטאבים">
+  <meta name="theme-color" content="#1d3d8f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="תווים">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>🎼 תווים</h1>
+    <span id="serverStatus" class="pill" title="מצב שרת העיבוד">בודק שרת…</span>
+  </header>
+
+  <main>
+    <!-- מסך בית -->
+    <section id="home" class="screen">
+      <p class="lead">מנגנים או מעלים שיר, ומקבלים תווים, אקורדים וטאבים.</p>
+
+      <div class="field">
+        <span class="label">כלי</span>
+        <div class="seg" data-setting="instrument">
+          <button type="button" data-value="guitar">🎸 גיטרה</button>
+          <button type="button" data-value="piano">🎹 פסנתר</button>
+        </div>
+      </div>
+
+      <div class="big-actions">
+        <button id="btnRecord" class="big primary" type="button">
+          <span class="big-icon">🎤</span>
+          <span>הקלטה</span>
+          <small>נגנו ליד הטלפון</small>
+        </button>
+        <label class="big" for="fileInput">
+          <span class="big-icon">📁</span>
+          <span>העלאת קובץ</span>
+          <small>MP3 · WAV · M4A</small>
+        </label>
+        <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac" hidden>
+      </div>
+
+      <div id="lastSong" class="card" hidden>
+        <span>השיר האחרון:</span> <b id="lastTitle"></b>
+        <button id="btnOpenLast" type="button" class="link">פתיחה</button>
+      </div>
+
+      <details class="tips">
+        <summary>טיפים לתוצאה טובה</summary>
+        <ul>
+          <li>הכי טוב: כלי אחד, בלי רעש רקע, הטלפון קרוב לכלי.</li>
+          <li>בהקלטה של שיר שלם עם תופים וזמר, התוצאה פחות מדויקת. אז כדאי לבחור "מנגינה" בלבד.</li>
+          <li>קטעים קצרים (עד 2–3 דקות) מעובדים מהר יותר.</li>
+          <li>בפעם הראשונה ביום השרת "מתעורר" וזה יכול לקחת דקה-שתיים.</li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- מסך הקלטה -->
+    <section id="recording" class="screen" hidden>
+      <div class="rec-box">
+        <div class="rec-dot"></div>
+        <div id="recTime" class="rec-time">0:00</div>
+        <div class="meter"><div id="recLevel"></div></div>
+        <p class="muted">מקליט… נגנו עכשיו</p>
+        <button id="btnStop" class="big primary" type="button">⏹ סיום הקלטה</button>
+        <button id="btnCancelRec" class="link" type="button">ביטול</button>
+      </div>
+    </section>
+
+    <!-- מסך תצוגה מקדימה לפני שליחה -->
+    <section id="preview" class="screen" hidden>
+      <h2>מוכן להמרה</h2>
+      <p id="previewName" class="muted"></p>
+      <audio id="previewAudio" controls preload="metadata"></audio>
+      <div class="field">
+        <span class="label">רגישות</span>
+        <input id="sensitivity" type="range" min="0" max="1" step="0.1" value="0.5">
+        <small class="muted">יותר רגישות = יותר תווים (גם שגויים)</small>
+      </div>
+      <div class="row">
+        <button id="btnAnalyze" class="big primary" type="button">🎼 המרה לתווים</button>
+        <button id="btnBackHome" class="secondary" type="button">חזרה</button>
+      </div>
+    </section>
+
+    <!-- מסך עיבוד -->
+    <section id="processing" class="screen" hidden>
+      <div class="spinner"></div>
+      <p id="procMsg">מעבד…</p>
+      <p class="muted">אפשר להשאיר את המסך פתוח. זה לוקח בדרך כלל חצי דקה עד דקה.</p>
+    </section>
+
+    <!-- מסך תוצאה -->
+    <section id="result" class="screen" hidden>
+      <div class="result-head">
+        <input id="songTitle" class="title-input" type="text" placeholder="שם השיר" maxlength="80">
+        <div id="songInfo" class="muted"></div>
+      </div>
+
+      <div class="toolbar">
+        <div class="seg small" data-setting="instrument">
+          <button type="button" data-value="guitar">🎸 גיטרה</button>
+          <button type="button" data-value="piano">🎹 פסנתר</button>
+        </div>
+        <div class="seg small" data-setting="content">
+          <button type="button" data-value="melody">מנגינה</button>
+          <button type="button" data-value="full">הכול</button>
+        </div>
+        <div class="seg small" data-setting="grid">
+          <button type="button" data-value="2">שמיניות</button>
+          <button type="button" data-value="4">שש-עשריות</button>
+        </div>
+        <div class="seg small" data-setting="beatsPerMeasure">
+          <button type="button" data-value="4">4/4</button>
+          <button type="button" data-value="3">3/4</button>
+        </div>
+        <label id="tabToggle" class="check"><input id="showTab" type="checkbox" checked> טאבים</label>
+        <div class="zoom">
+          <button id="zoomOut" type="button" aria-label="הקטנה">−</button>
+          <button id="zoomIn" type="button" aria-label="הגדלה">+</button>
+        </div>
+      </div>
+
+      <div class="row actions">
+        <button id="btnPdf" class="primary" type="button">⬇️ PDF</button>
+        <button id="btnNew" class="secondary" type="button">שיר חדש</button>
+      </div>
+
+      <audio id="resultAudio" controls preload="metadata" hidden></audio>
+      <div id="scoreWrap" class="score-wrap"><div id="score" dir="ltr"></div></div>
+    </section>
+
+    <div id="toast" class="toast" hidden></div>
+  </main>
+
+  <script src="lib/vexflow.js"></script>
+  <script src="lib/jspdf.umd.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
