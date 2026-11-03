@@ -133,11 +133,28 @@
 
       <div class="row actions">
         <button id="btnPdf" class="primary" type="button">⬇️ PDF</button>
+        <button id="btnLyrics" class="secondary" type="button">✍️ מילים</button>
         <button id="btnNew" class="secondary" type="button">שיר חדש</button>
       </div>
 
-      <audio id="resultAudio" controls preload="metadata" hidden></audio>
-      <div id="scoreWrap" class="score-wrap"><div id="score" dir="ltr"></div></div>
+      <div id="lyricsPanel" class="card" hidden>
+        <label for="lyricsText" class="label">מילות השיר</label>
+        <textarea id="lyricsText" rows="6" dir="rtl" placeholder="מקלידים או מדביקים כאן את המילים"></textarea>
+        <small class="muted">כל מילה נכנסת מתחת לתו הבא. מילה שנמשכת על כמה תווים מחלקים במקף, למשל: שָׁ-לוֹם</small>
+        <div class="row">
+          <button id="btnLyricsApply" class="primary" type="button">הצגה מתחת לתווים</button>
+          <button id="btnLyricsClose" class="secondary" type="button">סגירה</button>
+        </div>
+      </div>
+
+      <p id="playHint" class="muted small-hint" hidden>▶️ לחצו נגן - התווים ירוצו עם השיר. נגיעה בתו קופצת לאותו מקום.</p>
+      <div id="scoreWrap" class="score-wrap">
+        <div id="score" dir="ltr"></div>
+        <div id="cursor" class="cursor" hidden></div>
+      </div>
+      <div class="player-bar" id="playerBar" hidden>
+        <audio id="resultAudio" controls preload="metadata"></audio>
+      </div>
     </section>
 
     <div id="toast" class="toast" hidden></div>

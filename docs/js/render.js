@@ -13,12 +13,23 @@ function vfKey(midi, flats) {
 }
 
 const SYSTEM_TOP = 62;     // מקום לשמות אקורדים מעל החמשה
-const STAFF_GAP = 105;     // מרחק בין חמשות באותה שורה
-const TAB_GAP = 100;
+const LYRICS_GAP = 26;     // מקום נוסף למילים מתחת לחמשה העליונה
+
+const lyricsGap = (score) => (score.hasLyrics ? LYRICS_GAP : 0);
+const staffGap = (score) => 105 + lyricsGap(score);   // מרחק בין חמשות באותה שורה
+const tabGap = (score) => 100 + lyricsGap(score);
 
 export function systemHeight(score) {
-  if (score.instrument === 'piano') return SYSTEM_TOP + STAFF_GAP + 110;
-  return SYSTEM_TOP + (score.staves[0].tab ? STAFF_GAP + TAB_GAP + 10 : 110);
+  if (score.instrument === 'piano') return SYSTEM_TOP + staffGap(score) + 110;
+  return SYSTEM_TOP + (score.staves[0].tab ? tabGap(score) + 115 : 110 + lyricsGap(score));
+}
+
+// מדידת רוחב טקסט (למרכוז מילים מתחת לתו)
+let measureCtx = null;
+function textWidth(text, px) {
+  if (!measureCtx) measureCtx = document.createElement('canvas').getContext('2d');
+  measureCtx.font = `${px}px Arial, sans-serif`;
+  return measureCtx.measureText(text).width;
 }
 
 function measureMinWidth(score, m) {
@@ -122,7 +133,7 @@ export function drawSystems(ctx, score, systems, startY, opts = {}) {
       const voices = [];
       const beamsAll = [];
       score.staves.forEach((staff, sti) => {
-        const sy = y + SYSTEM_TOP + sti * STAFF_GAP;
+        const sy = y + SYSTEM_TOP + sti * staffGap(score);
         const st = new F.Stave(x, sy, w);
         if (mi === 0) {
           st.addClef(staff.clef, 'default', staff.octaveShift ? '8vb' : undefined);
@@ -139,7 +150,7 @@ export function drawSystems(ctx, score, systems, startY, opts = {}) {
         lineNotes[sti].push(...notes);
 
         if (staff.tab) {
-          const tst = new F.TabStave(x, sy + TAB_GAP, w);
+          const tst = new F.TabStave(x, sy + tabGap(score), w);
           if (mi === 0) tst.addClef('tab');
           staves.push(tst);
           const tv = makeVoice(score, tabNotes);
@@ -191,6 +202,40 @@ export function drawSystems(ctx, score, systems, startY, opts = {}) {
         ctx.fillText(c.label, nx - 2, Math.max(y + 16, topY));
       }
       ctx.restore();
+
+      // מילים מתחת לחמשה העליונה
+      if (score.hasLyrics) {
+        ctx.save();
+        ctx.setFont('Arial', 14, 'normal');
+        ctx.setFillStyle('#111');
+        const baseY = top.stave.getYForLine(4) + 30;
+        for (const nn of top.notes) {
+          const ly = nn.__item.lyric;
+          if (!ly) continue;
+          let by = baseY;
+          try { by = Math.max(baseY, nn.getBoundingBox().getY() + nn.getBoundingBox().getH() + 16); } catch (e) { /* ignore */ }
+          by = Math.min(by, top.stave.getYForLine(4) + 30 + LYRICS_GAP);
+          const cx = nn.getAbsoluteX() + 6;
+          // המקף מצויר בנפרד מימין להברה (כיוון התווים), בלי תלות בכיווניות הטקסט
+          const hyph = ly.endsWith('-');
+          const txt = hyph ? ly.slice(0, -1) : ly;
+          const tw = textWidth(txt, 14);
+          ctx.fillText(txt, cx - tw / 2, by);
+          if (hyph) ctx.fillText('-', cx + tw / 2 + 5, by);
+        }
+        ctx.restore();
+      }
+
+      // נקודות עיגון לסמן הניגון (תו -> מיקום על המסך)
+      if (opts.anchors) {
+        const sysBottom = y + systemHeight(score) - 10;
+        for (const nn of top.notes) {
+          let el = null;
+          try { el = nn.getSVGElement ? nn.getSVGElement() : null; } catch (e) { /* ignore */ }
+          opts.anchors.push({ tick: nn.__item.start, x: nn.getAbsoluteX() + 5, top: y + SYSTEM_TOP - 30, bottom: sysBottom, el, rest: nn.__item.rest });
+        }
+        opts.anchors.push({ tick: (m + 1) * score.measureTicks, x: x + w - 4, top: y + SYSTEM_TOP - 30, bottom: sysBottom, el: null, end: true });
+      }
 
       // מספר תיבה בתחילת שורה
       if (mi === 0) {
@@ -287,8 +332,11 @@ export function renderToElement(el, score, { width, zoom = 1 }) {
   const ctx = renderer.getContext();
   ctx.scale(zoom, zoom);
   let y = drawChordDiagrams(ctx, score, logicalW, 6);
-  drawSystems(ctx, score, systems, y);
-  return { systems };
+  const anchors = [];
+  drawSystems(ctx, score, systems, y, { anchors });
+  // התאמה לזום
+  for (const a of anchors) { a.x *= zoom; a.top *= zoom; a.bottom *= zoom; }
+  return { systems, anchors };
 }
 
 export { TPB };

@@ -15,7 +15,9 @@ const state = {
   audio: null,      // { blob, name }
   analysis: null,
   title: '',
+  lyrics: '',
   score: null,
+  anchors: [],
 };
 state.settings.transpose = 0;
 
@@ -26,9 +28,39 @@ function save(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* מקום מלא/פרטי */ }
 }
 
+// ---------- שמירת קובץ השמע של השיר האחרון (IndexedDB) ----------
+function idb() {
+  return new Promise((resolve, reject) => {
+    const r = indexedDB.open('music-notes', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('files');
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+async function idbPut(key, value) {
+  try {
+    const db = await idb();
+    await new Promise((res, rej) => {
+      const tx = db.transaction('files', 'readwrite');
+      tx.objectStore('files').put(value, key);
+      tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+    });
+  } catch (e) { /* פרטי/מלא - לא קריטי */ }
+}
+async function idbGet(key) {
+  try {
+    const db = await idb();
+    return await new Promise((res, rej) => {
+      const r = db.transaction('files').objectStore('files').get(key);
+      r.onsuccess = () => res(r.result || null); r.onerror = () => rej(r.error);
+    });
+  } catch (e) { return null; }
+}
+
 // ---------- ניווט בין מסכים ----------
 const SCREENS = ['home', 'recording', 'preview', 'processing', 'result'];
 function show(id) {
+  if (id !== 'result') { try { $('resultAudio').pause(); } catch (e) { /* ignore */ } }
   SCREENS.forEach((s) => { $(s).hidden = s !== id; });
   window.scrollTo(0, 0);
 }
@@ -146,6 +178,7 @@ $('fileInput').addEventListener('change', (e) => {
 function setAudio(blob, name, title) {
   state.audio = { blob, name };
   state.title = title;
+  state.lyrics = '';
   const url = URL.createObjectURL(blob);
   $('previewAudio').src = url;
   $('resultAudio').src = url;
@@ -174,7 +207,8 @@ $('btnAnalyze').addEventListener('click', async () => {
       throw new Error('לא זוהו צלילים בהקלטה. נסו להקליט קרוב יותר לכלי.');
     }
     state.analysis = analysis;
-    save(LS_LAST, { analysis, title: state.title, savedAt: Date.now() });
+    save(LS_LAST, { analysis, title: state.title, lyrics: '', savedAt: Date.now() });
+    idbPut('last-audio', state.audio.blob);
     openResult();
   } catch (e) {
     toast(e.message || 'משהו השתבש', true, 8000);
@@ -185,7 +219,11 @@ $('btnAnalyze').addEventListener('click', async () => {
 // ---------- תוצאה ----------
 function openResult() {
   $('songTitle').value = state.title || '';
-  $('resultAudio').hidden = !state.audio;
+  $('lyricsText').value = state.lyrics || '';
+  $('lyricsPanel').hidden = true;
+  $('playerBar').hidden = !state.audio;
+  $('playHint').hidden = !state.audio;
+  if (state.audio) $('resultAudio').src = URL.createObjectURL(state.audio.blob);
   syncSegs();
   show('result');
   renderScore();
@@ -194,16 +232,108 @@ function openResult() {
 function renderScore() {
   if (!state.analysis) return;
   try {
-    state.score = buildScore(state.analysis, state.settings);
+    state.score = buildScore(state.analysis, state.settings, state.lyrics);
     const s = state.score;
     $('songInfo').textContent = `סולם: ${s.key.hebrew} · טמפו: ${s.tempo} · ${s.numMeasures} תיבות`;
     const wrap = $('scoreWrap');
-    renderToElement($('score'), s, { width: wrap.clientWidth - 2, zoom: state.zoom });
+    const r = renderToElement($('score'), s, { width: wrap.clientWidth - 2, zoom: state.zoom });
+    state.anchors = r.anchors;
+    lastAnchor = null;
+    updateCursor(true);
   } catch (e) {
     console.error(e);
     toast('שגיאה בציור התווים: ' + e.message, true);
   }
 }
+
+// ---------- ניגון: סמן שרץ על התווים ----------
+let lastAnchor = null;
+let rafId = 0;
+
+function anchorAt(tick) {
+  // העוגן האחרון שהתחיל עד הרגע הזה (בסדר הציור: סוף תיבה ואז התו הראשון של הבאה)
+  const A = state.anchors;
+  if (!A.length) return null;
+  let i = 0;
+  for (let k = 0; k < A.length; k++) if (A[k].tick <= tick + 1e-6) i = k;
+  return i;
+}
+
+function updateCursor(force = false) {
+  const audio = $('resultAudio');
+  const cur = $('cursor');
+  if (!state.score || !state.audio || !state.anchors.length || (audio.paused && audio.currentTime === 0 && !force)) {
+    cur.hidden = true;
+    return;
+  }
+  const tick = state.score.timeToTick(audio.currentTime);
+  const A = state.anchors;
+  const i = anchorAt(tick);
+  if (i == null) return;
+  const a = A[i];
+  let x = a.x;
+  const b = A[i + 1];
+  if (b && b.top === a.top && b.tick > a.tick) {
+    x = a.x + (b.x - a.x) * Math.min(1, Math.max(0, (tick - a.tick) / (b.tick - a.tick)));
+  }
+  const off = $('score').offsetTop;
+  cur.hidden = false;
+  cur.style.left = x + 'px';
+  cur.style.top = (off + a.top) + 'px';
+  cur.style.height = (a.bottom - a.top) + 'px';
+
+  // הדגשת התו שמתנגן
+  const noteA = a.end ? null : a;
+  if (noteA !== lastAnchor) {
+    if (lastAnchor && lastAnchor.el) lastAnchor.el.classList.remove('playing');
+    if (noteA && noteA.el && !noteA.rest) noteA.el.classList.add('playing');
+    lastAnchor = noteA;
+    // גלילה אוטומטית כשהשורה יוצאת מהמסך
+    if (!audio.paused) {
+      const r = cur.getBoundingClientRect();
+      const barH = $('playerBar').offsetHeight || 70;
+      if (r.top < 70 || r.bottom > window.innerHeight - barH - 10) {
+        window.scrollBy({ top: r.top - window.innerHeight * 0.25, behavior: 'smooth' });
+      }
+    }
+  }
+}
+
+function loop() {
+  updateCursor();
+  if (!$('resultAudio').paused) rafId = requestAnimationFrame(loop);
+}
+$('resultAudio').addEventListener('play', () => { cancelAnimationFrame(rafId); loop(); });
+$('resultAudio').addEventListener('pause', () => { cancelAnimationFrame(rafId); updateCursor(true); });
+$('resultAudio').addEventListener('seeked', () => updateCursor(true));
+
+// נגיעה בתו => קפיצה לאותו מקום בשיר
+$('score').addEventListener('click', (e) => {
+  if (!state.audio || !state.anchors.length) return;
+  const rect = $('score').getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const row = state.anchors.filter((a) => y >= a.top && y <= a.bottom && !a.end);
+  if (!row.length) return;
+  let best = row[0];
+  for (const a of row) if (Math.abs(a.x - x) < Math.abs(best.x - x)) best = a;
+  const audio = $('resultAudio');
+  audio.currentTime = Math.max(0, state.score.tickToTime(best.tick));
+  if (audio.paused) audio.play().catch(() => {});
+});
+
+// ---------- מילים ----------
+$('btnLyrics').addEventListener('click', () => {
+  $('lyricsPanel').hidden = !$('lyricsPanel').hidden;
+  if (!$('lyricsPanel').hidden) $('lyricsText').focus();
+});
+$('btnLyricsClose').addEventListener('click', () => { $('lyricsPanel').hidden = true; });
+$('btnLyricsApply').addEventListener('click', () => {
+  state.lyrics = $('lyricsText').value;
+  const last = load(LS_LAST, null);
+  if (last) save(LS_LAST, { ...last, lyrics: state.lyrics });
+  $('lyricsPanel').hidden = true;
+  renderScore();
+});
 
 $('songTitle').addEventListener('input', (e) => {
   state.title = e.target.value;
@@ -255,12 +385,14 @@ function refreshLast() {
   $('lastSong').hidden = !last;
   if (last) $('lastTitle').textContent = last.title || 'ללא שם';
 }
-$('btnOpenLast').addEventListener('click', () => {
+$('btnOpenLast').addEventListener('click', async () => {
   const last = load(LS_LAST, null);
   if (!last) return;
   state.analysis = last.analysis;
   state.title = last.title;
-  state.audio = null;
+  state.lyrics = last.lyrics || '';
+  const blob = await idbGet('last-audio');
+  state.audio = blob ? { blob, name: 'last' } : null;
   openResult();
 });
 

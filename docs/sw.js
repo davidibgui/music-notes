@@ -1,6 +1,6 @@
 // Service worker: שמירת קבצי האפליקציה כדי שתיפתח מהר (גם בלי רשת).
 // בכל שינוי בקבצים - להעלות את מספר הגרסה.
-const CACHE = 'music-notes-v3';
+const CACHE = 'music-notes-v4';
 const ASSETS = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/app.js', 'js/audio.js', 'js/analyzer.js', 'js/score.js', 'js/render.js', 'js/chords.js', 'js/pdf.js',

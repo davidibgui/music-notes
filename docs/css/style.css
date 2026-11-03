@@ -129,3 +129,23 @@ input[type=range] { width: 100%; max-width: 360px; }
 
 .meter.proc { margin: 10px auto; }
 .meter.proc div { background: var(--primary); transition: width .3s; }
+
+/* ניגון עם סמן רץ */
+.score-wrap { position: relative; }
+.cursor {
+  position: absolute; width: 3px; border-radius: 2px; pointer-events: none;
+  background: rgba(211, 47, 47, .85); box-shadow: 0 0 6px rgba(211, 47, 47, .6);
+  transition: left .05s linear;
+}
+#score .playing path, #score .playing rect { fill: #d32f2f !important; stroke: #d32f2f !important; }
+#score { cursor: pointer; }
+.player-bar {
+  position: sticky; bottom: 0; z-index: 6;
+  background: var(--bg); padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
+}
+.player-bar audio { margin: 0; }
+.small-hint { font-size: 14px; margin: 6px 2px; }
+textarea {
+  width: 100%; font: inherit; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
+  background: #fff; resize: vertical; line-height: 1.6;
+}

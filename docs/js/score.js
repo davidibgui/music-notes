@@ -69,6 +69,29 @@ export function makeBeatMapper(beats) {
   };
 }
 
+/** פעמה (מספר עשרוני) -> שניות. ההפך של makeBeatMapper. */
+export function makeTimeMapper(beats) {
+  const b = beats && beats.length >= 2 ? beats : [0, 0.6];
+  const n = b.length;
+  return (beat) => {
+    if (beat <= 0) return b[0] + beat * (b[1] - b[0]);
+    if (beat >= n - 1) return b[n - 1] + (beat - (n - 1)) * (b[n - 1] - b[n - 2]);
+    const i = Math.floor(beat);
+    return b[i] + (beat - i) * (b[i + 1] - b[i]);
+  };
+}
+
+/** פירוק טקסט מילים לאסימונים: רווח בין מילים, מקף בין הברות (שָׁ-לוֹם). */
+export function lyricTokens(text) {
+  const out = [];
+  for (const word of (text || '').split(/\s+/)) {
+    if (!word) continue;
+    const parts = word.split('-').filter(Boolean);
+    parts.forEach((p, i) => out.push(i < parts.length - 1 ? p + '-' : p));
+  }
+  return out;
+}
+
 /** אקורד לכל "משבצת" (חצי תיבה ב-4/4, תיבה ב-3/4) לפי רוב קולות. */
 function chordSlots(perBeat, startBeat, bpm) {
   const step = bpm % 2 === 0 ? bpm / 2 : bpm;
@@ -238,7 +261,7 @@ function assignTab(events) {
 /**
  * הפונקציה הראשית: analysis (מהשרת) + settings => מבנה תווים מוכן לציור.
  */
-export function buildScore(analysis, userSettings = {}) {
+export function buildScore(analysis, userSettings = {}, lyrics = '') {
   const st = { ...DEFAULT_SETTINGS, ...userSettings };
   const bpm = st.beatsPerMeasure;
   const measureTicks = bpm * TPB;
@@ -330,7 +353,23 @@ export function buildScore(analysis, userSettings = {}) {
     staves.push({ clef: 'bass', octaveShift: 0, measures: buildVoice(bass, numMeasures, measureTicks, chordTicks, 5, q) });
   }
 
+  // מילים: מילה/הברה לכל תו חדש בחמשה העליונה
+  const tokens = lyricTokens(lyrics);
+  if (tokens.length) {
+    let i = 0;
+    for (const m of staves[0].measures) {
+      for (const it of m) {
+        if (i >= tokens.length) break;
+        if (!it.rest && it.first) it.lyric = tokens[i++];
+      }
+    }
+  }
+
+  const toTime = makeTimeMapper(analysis.beats);
   return {
+    hasLyrics: tokens.length > 0,
+    timeToTick: (t) => (toBeat(t) - startBeat) * TPB,
+    tickToTime: (tick) => toTime(startBeat + tick / TPB),
     settings: st,
     key,
     tempo: Math.round(analysis.tempo || 90),
