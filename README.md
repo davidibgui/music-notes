@@ -38,7 +38,7 @@ server/    שרת העיבוד - Hugging Face Spaces (Docker)
 5. כתובת השרת תהיה: `https://<שם-המשתמש>-music-notes-server.hf.space`.
    בודקים בדפדפן: `.../health` אמור להחזיר `{"ok":true}`.
 
-> אם שם המשתמש ב-Hugging Face הוא לא `davidibgui`, צריך לעדכן את הכתובת ב-`docs/js/config.js`.
+> שם המשתמש ב-Hugging Face הוא `davidibgui1952`. אם משתנה, צריך לעדכן את הכתובת ב-`docs/js/config.js`.
 > אם כתובת האתר ב-GitHub Pages שונה, מוסיפים אותה ב-Space: **Settings → Variables**: `ALLOWED_ORIGINS` = `https://<user>.github.io`.
 
 ### 2. האפליקציה ב-GitHub Pages
