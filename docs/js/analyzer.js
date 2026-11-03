@@ -54,7 +54,7 @@ async function decodeToMono(blob) {
       if (p && p.then) p.then(resolve, reject);
     });
   } catch (e) {
-    throw new Error('לא הצלחתי לקרוא את קובץ האודיו. נסו MP3, WAV או M4A.');
+    throw new Error('err.decode');
   } finally {
     try { ac.close(); } catch (e) { /* ignore */ }
   }
@@ -73,7 +73,7 @@ async function decodeToMono(blob) {
   const data = new Float32Array(rendered.getChannelData(0));
   let peak = 0;
   for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
-  if (peak < 1e-4) throw new Error('ההקלטה שקטה מדי - לא נשמע כלום.');
+  if (peak < 1e-4) throw new Error('err.silent');
   const g = 0.9 / peak;
   for (let i = 0; i < data.length; i++) data[i] *= g;
   return { data, duration };

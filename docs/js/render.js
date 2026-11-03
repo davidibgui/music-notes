@@ -232,9 +232,18 @@ export function drawSystems(ctx, score, systems, startY, opts = {}) {
         for (const nn of top.notes) {
           let el = null;
           try { el = nn.getSVGElement ? nn.getSVGElement() : null; } catch (e) { /* ignore */ }
-          opts.anchors.push({ tick: nn.__item.start, x: nn.getAbsoluteX() + 5, top: y + SYSTEM_TOP - 30, bottom: sysBottom, el, rest: nn.__item.rest });
+          opts.anchors.push({ tick: nn.__item.start, x: nn.getAbsoluteX() + 5, top: y + SYSTEM_TOP - 30, bottom: sysBottom, el, rest: nn.__item.rest, item: nn.__item });
         }
         opts.anchors.push({ tick: (m + 1) * score.measureTicks, x: x + w - 4, top: y + SYSTEM_TOP - 30, bottom: sysBottom, el: null, end: true });
+      }
+
+      // סימון טמפו בתחילת השיר
+      if (m === 0) {
+        ctx.save();
+        ctx.setFont('Arial', 13, 'bold');
+        ctx.setFillStyle('#333');
+        ctx.fillText(`♩ = ${score.tempo}`, x + 2, y + 14);
+        ctx.restore();
       }
 
       // מספר תיבה בתחילת שורה

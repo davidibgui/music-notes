@@ -25,7 +25,8 @@ export const DEFAULT_SETTINGS = {
   grid: 2,              // יחידות לפעמה: 2 = שמיניות, 4 = שש-עשריות
   beatsPerMeasure: 4,
   showTab: true,
-  transpose: 0,         // בחצאי טונים (לשלב 2)
+  transpose: 0,         // בחצאי טונים
+  tempo: 0,             // 0 = הטמפו שזוהה
 };
 
 const mod12 = (n) => ((n % 12) + 12) % 12;
@@ -170,8 +171,12 @@ function buildVoice(notes, numMeasures, measureTicks, splitTicks, maxPolyphony, 
   const groups = new Map();
   for (const n of notes) {
     if (n.st >= total) continue;
-    const g = groups.get(n.st) || { st: n.st, en: n.st, pitches: new Set(), tab: null };
+    const g = groups.get(n.st) || { st: n.st, en: n.st, pitches: new Set(), tab: null, srcByPitch: new Map() };
     g.pitches.add(n.pitch);
+    if (n.src != null) {
+      if (!g.srcByPitch.has(n.pitch)) g.srcByPitch.set(n.pitch, []);
+      g.srcByPitch.get(n.pitch).push(n.src);
+    }
     g.en = Math.max(g.en, Math.min(n.en, total));
     groups.set(n.st, g);
   }
@@ -180,6 +185,9 @@ function buildVoice(notes, numMeasures, measureTicks, splitTicks, maxPolyphony, 
     let p = [...events[i].pitches].sort((a, b) => a - b);
     if (p.length > maxPolyphony) p = p.slice(p.length - maxPolyphony);
     events[i].pitches = p;
+    // מקור התווים בניתוח (לעריכה)
+    events[i].srcs = p.flatMap((x) => events[i].srcByPitch.get(x) || []);
+    events[i].en0 = events[i].en;
     if (i + 1 < events.length) {
       const next = events[i + 1].st;
       // לגאטו: רווח קטן עד התו הבא נבלע (קריאות טובה יותר, פחות הפסקות קטנות)
@@ -290,17 +298,17 @@ export function buildScore(analysis, userSettings = {}, lyrics = '') {
   // כימות
   const seen = new Set();
   let notes = [];
-  for (const n of analysis.notes) {
+  analysis.notes.forEach((n, src) => {
     const s = toBeat(n.start) - startBeat;
     const e = toBeat(n.end) - startBeat;
     const sTick = Math.max(0, Math.round(s * st.grid) * q);
     const eTick = Math.max(sTick + q, Math.round(e * st.grid) * q);
     const pitch = n.pitch + st.transpose;
     const k = sTick + ':' + pitch;
-    if (seen.has(k)) continue;
+    if (seen.has(k)) return;
     seen.add(k);
-    notes.push({ st: sTick, en: eTick, pitch, vel: n.velocity });
-  }
+    notes.push({ st: sTick, en: eTick, pitch, vel: n.velocity, src });
+  });
   notes.sort((a, b) => a.st - b.st || a.pitch - b.pitch);
 
   // אקורדים: משבצות -> מקטעים בטיקים
@@ -372,7 +380,8 @@ export function buildScore(analysis, userSettings = {}, lyrics = '') {
     tickToTime: (tick) => toTime(startBeat + tick / TPB),
     settings: st,
     key,
-    tempo: Math.round(analysis.tempo || 90),
+    tempo: Math.round(st.tempo || analysis.tempo || 90),
+    startBeat,
     beatsPerMeasure: bpm,
     measureTicks,
     numMeasures,

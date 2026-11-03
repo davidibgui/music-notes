@@ -17,51 +17,106 @@
 </head>
 <body>
   <header class="topbar">
-    <h1>🎼 תווים</h1>
-    <span id="serverStatus" class="pill" title="מצב מנוע הזיהוי">טוען…</span>
+    <h1>🎼 <span data-i18n="app.title">תווים</span></h1>
+    <div class="top-actions">
+      <span id="serverStatus" class="pill" data-i18n-title="status.title" title="מצב מנוע הזיהוי">טוען…</span>
+      <button id="btnLang" class="lang-btn" type="button" data-i18n="lang.short" data-i18n-aria="lang.switch" aria-label="Français">FR</button>
+      <button id="btnAccount" class="acc-btn" type="button" data-i18n-aria="account.aria" aria-label="חשבון">👤</button>
+    </div>
   </header>
 
   <main>
     <!-- מסך בית -->
     <section id="home" class="screen">
-      <p class="lead">מנגנים או מעלים שיר, ומקבלים תווים, אקורדים וטאבים.</p>
+      <p class="lead" data-i18n="app.lead">מנגנים או מעלים שיר, ומקבלים תווים, אקורדים וטאבים.</p>
 
       <div class="field">
-        <span class="label">כלי</span>
+        <span class="label" data-i18n="field.instrument">כלי</span>
         <div class="seg" data-setting="instrument">
-          <button type="button" data-value="guitar">🎸 גיטרה</button>
-          <button type="button" data-value="piano">🎹 פסנתר</button>
+          <button type="button" data-value="guitar" data-i18n="inst.guitar">🎸 גיטרה</button>
+          <button type="button" data-value="piano" data-i18n="inst.piano">🎹 פסנתר</button>
         </div>
       </div>
 
       <div class="big-actions">
         <button id="btnRecord" class="big primary" type="button">
           <span class="big-icon">🎤</span>
-          <span>הקלטה</span>
-          <small>נגנו ליד הטלפון</small>
+          <span data-i18n="home.record">הקלטה</span>
+          <small data-i18n="home.record.sub">נגנו ליד הטלפון</small>
         </button>
         <label class="big" for="fileInput">
           <span class="big-icon">📁</span>
-          <span>העלאת קובץ</span>
-          <small>MP3 · WAV · M4A</small>
+          <span data-i18n="home.upload">העלאת קובץ</span>
+          <small data-i18n="home.upload.sub">MP3 · WAV · M4A · וידאו</small>
         </label>
-        <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac" hidden>
+        <input id="fileInput" type="file" accept="audio/*,video/*,.mp3,.wav,.m4a,.aac,.mp4,.mov" hidden>
       </div>
 
-      <div id="lastSong" class="card" hidden>
-        <span>השיר האחרון:</span> <b id="lastTitle"></b>
-        <button id="btnOpenLast" type="button" class="link">פתיחה</button>
+      <div class="card yt-card">
+        <label class="label" for="ytUrl" data-i18n="home.yt">▶️ שיר מ-YouTube</label>
+        <div class="row tight">
+          <input id="ytUrl" type="url" inputmode="url" dir="ltr" placeholder="https://youtu.be/...">
+          <button id="btnYt" class="secondary" type="button" data-i18n="home.yt.open">פתיחה</button>
+        </div>
       </div>
+
+      <section class="library">
+        <h2><span data-i18n="lib.title">השירים שלי</span> <small id="libWhere" class="muted"></small></h2>
+        <div id="songList"></div>
+        <p id="emptyLib" class="muted" hidden data-i18n="lib.empty">עוד אין שירים שמורים. כל שיר שממירים נשמר כאן אוטומטית.</p>
+      </section>
 
       <details class="tips">
-        <summary>טיפים לתוצאה טובה</summary>
+        <summary data-i18n="tips.title">טיפים לתוצאה טובה</summary>
         <ul>
-          <li>הכי טוב: כלי אחד, בלי רעש רקע, הטלפון קרוב לכלי.</li>
-          <li>בהקלטה של שיר שלם עם תופים וזמר, התוצאה פחות מדויקת. אז כדאי לבחור "מנגינה" בלבד.</li>
-          <li>קטעים קצרים (עד 2–3 דקות) מעובדים מהר יותר.</li>
-          <li>הכול נעשה בתוך המכשיר. ההקלטות לא נשלחות לשום מקום.</li>
+          <li data-i18n="tips.1"></li>
+          <li data-i18n="tips.2"></li>
+          <li data-i18n="tips.3"></li>
+          <li data-i18n="tips.4"></li>
         </ul>
       </details>
+    </section>
+
+    <!-- מסך YouTube -->
+    <section id="youtube" class="screen" hidden>
+      <h2 data-i18n="yt.title">שיר מ-YouTube</h2>
+      <div class="yt-frame"><iframe id="ytFrame" title="YouTube" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
+      <p class="muted" data-i18n="yt.explain"></p>
+      <div id="ytRecBox" class="rec-inline" hidden>
+        <div class="rec-dot"></div>
+        <div id="ytRecTime" class="rec-time small">0:00</div>
+        <div class="meter"><div id="ytRecLevel"></div></div>
+      </div>
+      <div class="row">
+        <button id="btnYtRec" class="big primary" type="button" data-i18n="yt.record">🎤 הקלטה</button>
+        <button id="btnYtBack" class="secondary" type="button" data-i18n="common.back">חזרה</button>
+      </div>
+    </section>
+
+    <!-- מסך חשבון -->
+    <section id="account" class="screen" hidden>
+      <h2 data-i18n="acc.title">חשבון</h2>
+      <div id="accNotConfigured" class="card" hidden data-i18n="acc.notConfigured"></div>
+      <div id="accLoggedOut" class="form" hidden>
+        <p class="muted" data-i18n="acc.why"></p>
+        <label class="label" for="accEmail" data-i18n="acc.email">אימייל</label>
+        <input id="accEmail" type="email" autocomplete="email" dir="ltr">
+        <label class="label" for="accPass" data-i18n="acc.password">סיסמה</label>
+        <input id="accPass" type="password" autocomplete="current-password" dir="ltr" minlength="6">
+        <div class="row">
+          <button id="btnSignIn" class="primary" type="button" data-i18n="acc.signIn">כניסה</button>
+          <button id="btnSignUp" class="secondary" type="button" data-i18n="acc.signUp">הרשמה</button>
+        </div>
+      </div>
+      <div id="accLoggedIn" hidden>
+        <p><span data-i18n="acc.loggedAs">מחובר בתור</span> <b id="accUser" dir="ltr"></b></p>
+        <div id="migrateBox" class="card" hidden>
+          <span id="migrateText"></span>
+          <button id="btnMigrate" class="primary" type="button" data-i18n="acc.migrate">העברה לחשבון</button>
+        </div>
+        <button id="btnSignOut" class="secondary" type="button" data-i18n="acc.signOut">התנתקות</button>
+      </div>
+      <button id="btnAccBack" class="link" type="button" data-i18n="common.back">חזרה</button>
     </section>
 
     <!-- מסך הקלטה -->
@@ -70,90 +125,134 @@
         <div class="rec-dot"></div>
         <div id="recTime" class="rec-time">0:00</div>
         <div class="meter"><div id="recLevel"></div></div>
-        <p class="muted">מקליט… נגנו עכשיו</p>
-        <button id="btnStop" class="big primary" type="button">⏹ סיום הקלטה</button>
-        <button id="btnCancelRec" class="link" type="button">ביטול</button>
+        <p class="muted" data-i18n="rec.recording">מקליט… נגנו עכשיו</p>
+        <button id="btnStop" class="big primary" type="button" data-i18n="rec.stop">⏹ סיום הקלטה</button>
+        <button id="btnCancelRec" class="link" type="button" data-i18n="common.cancel">ביטול</button>
       </div>
     </section>
 
     <!-- מסך תצוגה מקדימה לפני שליחה -->
     <section id="preview" class="screen" hidden>
-      <h2>מוכן להמרה</h2>
+      <h2 data-i18n="prev.title">מוכן להמרה</h2>
       <p id="previewName" class="muted"></p>
       <audio id="previewAudio" controls preload="metadata"></audio>
       <div class="field">
-        <span class="label">רגישות</span>
+        <span class="label" data-i18n="prev.sensitivity">רגישות</span>
         <input id="sensitivity" type="range" min="0" max="1" step="0.1" value="0.5">
-        <small class="muted">יותר רגישות = יותר תווים (גם שגויים)</small>
+        <small class="muted" data-i18n="prev.sensHint">יותר רגישות = יותר תווים (גם שגויים)</small>
       </div>
       <div class="row">
-        <button id="btnAnalyze" class="big primary" type="button">🎼 המרה לתווים</button>
-        <button id="btnBackHome" class="secondary" type="button">חזרה</button>
+        <button id="btnAnalyze" class="big primary" type="button" data-i18n="prev.analyze">🎼 המרה לתווים</button>
+        <button id="btnBackHome" class="secondary" type="button" data-i18n="common.back">חזרה</button>
       </div>
     </section>
 
     <!-- מסך עיבוד -->
     <section id="processing" class="screen" hidden>
       <div class="spinner"></div>
-      <p id="procMsg">מעבד…</p>
+      <p id="procMsg" data-i18n="proc.working">מעבד…</p>
       <div class="meter proc"><div id="procBar"></div></div>
-      <p class="muted">העיבוד נעשה בתוך הטלפון. השאירו את המסך פתוח עד הסוף.</p>
+      <p class="muted" data-i18n="proc.note">העיבוד נעשה בתוך הטלפון. השאירו את המסך פתוח עד הסוף.</p>
     </section>
 
     <!-- מסך תוצאה -->
     <section id="result" class="screen" hidden>
       <div class="result-head">
-        <input id="songTitle" class="title-input" type="text" placeholder="שם השיר" maxlength="80">
+        <input id="songTitle" class="title-input" type="text" data-i18n-ph="res.titlePh" placeholder="שם השיר" maxlength="80">
         <div id="songInfo" class="muted"></div>
       </div>
 
       <div class="toolbar">
         <div class="seg small" data-setting="instrument">
-          <button type="button" data-value="guitar">🎸 גיטרה</button>
-          <button type="button" data-value="piano">🎹 פסנתר</button>
+          <button type="button" data-value="guitar" data-i18n="inst.guitar">🎸 גיטרה</button>
+          <button type="button" data-value="piano" data-i18n="inst.piano">🎹 פסנתר</button>
         </div>
         <div class="seg small" data-setting="content">
-          <button type="button" data-value="melody">מנגינה</button>
-          <button type="button" data-value="full">הכול</button>
+          <button type="button" data-value="melody" data-i18n="res.melody">מנגינה</button>
+          <button type="button" data-value="full" data-i18n="res.full">הכול</button>
         </div>
         <div class="seg small" data-setting="grid">
-          <button type="button" data-value="2">שמיניות</button>
-          <button type="button" data-value="4">שש-עשריות</button>
+          <button type="button" data-value="2" data-i18n="res.eighths">שמיניות</button>
+          <button type="button" data-value="4" data-i18n="res.sixteenths">שש-עשריות</button>
         </div>
         <div class="seg small" data-setting="beatsPerMeasure">
           <button type="button" data-value="4">4/4</button>
           <button type="button" data-value="3">3/4</button>
         </div>
-        <label id="tabToggle" class="check"><input id="showTab" type="checkbox" checked> טאבים</label>
+        <label id="tabToggle" class="check"><input id="showTab" type="checkbox" checked> <span data-i18n="res.tabs">טאבים</span></label>
+        <div class="stepper" data-i18n-title="res.transposeTitle" title="העברת השיר לסולם אחר">
+          <span data-i18n="res.transpose">טרנספוזיציה</span>
+          <button id="trDown" type="button" aria-label="חצי טון למטה">−</button>
+          <b id="trVal">0</b>
+          <button id="trUp" type="button" aria-label="חצי טון למעלה">+</button>
+        </div>
+        <label class="check"><span data-i18n="res.tempo">טמפו</span> <input id="tempoInput" type="number" min="30" max="260" inputmode="numeric"></label>
+        <label class="check"><span data-i18n="res.speed">מהירות ניגון</span>
+          <select id="speed">
+            <option value="0.5">50%</option><option value="0.75">75%</option>
+            <option value="1" selected>100%</option><option value="1.25">125%</option>
+          </select>
+        </label>
         <div class="zoom">
-          <button id="zoomOut" type="button" aria-label="הקטנה">−</button>
-          <button id="zoomIn" type="button" aria-label="הגדלה">+</button>
+          <button id="zoomOut" type="button" data-i18n-aria="res.zoomOut" aria-label="הקטנה">−</button>
+          <button id="zoomIn" type="button" data-i18n-aria="res.zoomIn" aria-label="הגדלה">+</button>
         </div>
       </div>
 
       <div class="row actions">
         <button id="btnPdf" class="primary" type="button">⬇️ PDF</button>
-        <button id="btnLyrics" class="secondary" type="button">✍️ מילים</button>
-        <button id="btnNew" class="secondary" type="button">שיר חדש</button>
+        <button id="btnLyrics" class="secondary" type="button" data-i18n="res.lyrics">✍️ מילים</button>
+        <button id="btnEdit" class="secondary" type="button" data-i18n="res.edit">✏️ עריכה</button>
+        <button id="btnNew" class="secondary" type="button" data-i18n="res.mySongs">🏠 השירים שלי</button>
+        <span id="saveStatus" class="muted save-status"></span>
       </div>
 
       <div id="lyricsPanel" class="card" hidden>
-        <label for="lyricsText" class="label">מילות השיר</label>
-        <textarea id="lyricsText" rows="6" dir="rtl" placeholder="מקלידים או מדביקים כאן את המילים"></textarea>
-        <small class="muted">כל מילה נכנסת מתחת לתו הבא. מילה שנמשכת על כמה תווים מחלקים במקף, למשל: שָׁ-לוֹם</small>
+        <label for="lyricsText" class="label" data-i18n="ly.title">מילות השיר</label>
+        <textarea id="lyricsText" rows="6" dir="auto" data-i18n-ph="ly.ph" placeholder="מקלידים או מדביקים כאן את המילים"></textarea>
+        <small class="muted" data-i18n="ly.hint"></small>
         <div class="row">
-          <button id="btnLyricsApply" class="primary" type="button">הצגה מתחת לתווים</button>
-          <button id="btnLyricsClose" class="secondary" type="button">סגירה</button>
+          <button id="btnLyricsApply" class="primary" type="button" data-i18n="ly.apply">הצגה מתחת לתווים</button>
+          <button id="btnLyricsClose" class="secondary" type="button" data-i18n="common.close">סגירה</button>
         </div>
       </div>
 
-      <p id="playHint" class="muted small-hint" hidden>▶️ לחצו נגן - התווים ירוצו עם השיר. נגיעה בתו קופצת לאותו מקום.</p>
+      <p id="playHint" class="muted small-hint" hidden data-i18n="res.playHint"></p>
       <div id="scoreWrap" class="score-wrap">
         <div id="score" dir="ltr"></div>
         <div id="cursor" class="cursor" hidden></div>
       </div>
-      <div class="player-bar" id="playerBar" hidden>
-        <audio id="resultAudio" controls preload="metadata"></audio>
+      <div class="bottom-bar">
+        <div id="editPanel" class="edit-panel" hidden>
+          <div class="edit-head">
+            <b id="selInfo" data-i18n="ed.pick">נגעו בתו כדי לבחור אותו</b>
+            <button id="btnUndo" type="button" disabled data-i18n="ed.undo">↶ ביטול</button>
+            <button id="btnEditDone" type="button" class="primary" data-i18n="ed.done">סיום</button>
+          </div>
+          <div class="edit-row" id="noteTools">
+            <button data-act="prev" type="button" data-i18n-aria="ed.prev" aria-label="התו הקודם">⏪</button>
+            <button data-act="next" type="button" data-i18n-aria="ed.next" aria-label="התו הבא">⏩</button>
+            <button data-act="up" type="button" data-i18n="ed.up">▲ חצי טון</button>
+            <button data-act="down" type="button" data-i18n="ed.down">▼ חצי טון</button>
+            <button data-act="octUp" type="button" data-i18n="ed.octUp">⏫ אוקטבה</button>
+            <button data-act="octDown" type="button" data-i18n="ed.octDown">⏬ אוקטבה</button>
+            <button data-act="shorter" type="button" data-i18n="ed.shorter">קצר יותר</button>
+            <button data-act="longer" type="button" data-i18n="ed.longer">ארוך יותר</button>
+            <button data-act="add" type="button" data-i18n="ed.add">➕ תו</button>
+            <button data-act="delete" type="button" class="danger" data-i18n="ed.delete">🗑 מחיקה</button>
+          </div>
+          <div class="edit-row">
+            <span data-i18n="ed.chordFrom">אקורד מכאן:</span>
+            <select id="chRoot"></select>
+            <select id="chQual">
+              <option value="" data-i18n="ed.major">מז׳ור</option><option value="m" data-i18n="ed.minor">מינור</option><option value="7">7</option>
+            </select>
+            <button id="btnSetChord" type="button" data-i18n="ed.apply">החלה</button>
+          </div>
+        </div>
+        <div class="player-bar" id="playerBar" hidden>
+          <audio id="resultAudio" controls preload="metadata"></audio>
+        </div>
       </div>
     </section>
 

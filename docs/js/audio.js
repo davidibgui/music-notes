@@ -15,7 +15,7 @@ export class Recorder {
 
   async start() {
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-      throw new Error('הדפדפן לא תומך בהקלטה. נסו ספארי מעודכן או העלו קובץ.');
+      throw new Error('err.noRecord');
     }
     // כיבוי עיבודי "שיחה" שפוגעים בצליל של כלי נגינה
     this.stream = await navigator.mediaDevices.getUserMedia({

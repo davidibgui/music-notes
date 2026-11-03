@@ -139,13 +139,52 @@ input[type=range] { width: 100%; max-width: 360px; }
 }
 #score .playing path, #score .playing rect { fill: #d32f2f !important; stroke: #d32f2f !important; }
 #score { cursor: pointer; }
-.player-bar {
-  position: sticky; bottom: 0; z-index: 6;
-  background: var(--bg); padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
-}
+.bottom-bar { position: sticky; bottom: 0; z-index: 6; }
+.player-bar { background: var(--bg); padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); }
 .player-bar audio { margin: 0; }
 .small-hint { font-size: 14px; margin: 6px 2px; }
 textarea {
   width: 100%; font: inherit; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
   background: #fff; resize: vertical; line-height: 1.6;
 }
+
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.acc-btn { border: 1px solid var(--border); background: var(--card); border-radius: 50%; width: 38px; height: 38px; font-size: 18px; cursor: pointer; }
+.acc-btn.in { background: #e3f4e6; border-color: #9fd3a9; }
+.row.tight { margin: 4px 0 0; flex-wrap: nowrap; }
+.row.tight input { flex: 1; min-width: 0; }
+input[type=url], input[type=email], input[type=password], input[type=number], select {
+  font: inherit; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--border); background: #fff; min-height: 42px;
+}
+input[type=number] { width: 78px; }
+.form { display: flex; flex-direction: column; gap: 6px; max-width: 420px; }
+.library h2 { font-size: 20px; margin-top: 22px; }
+.song-item { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
+.song-item .open { flex: 1; text-align: start; background: none; border: 0; font: inherit; cursor: pointer; padding: 4px 0; color: var(--text); }
+.song-item .open small { display: block; color: var(--muted); font-size: 13px; }
+.song-item .del { background: none; border: 0; font-size: 20px; cursor: pointer; padding: 6px; }
+.yt-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden; }
+.yt-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.rec-inline { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+.rec-time.small { font-size: 26px; }
+.stepper { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; background: #e7eaf1; border-radius: 10px; min-height: 38px; }
+.stepper button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); font-size: 18px; cursor: pointer; }
+.stepper b { min-width: 26px; text-align: center; font-variant-numeric: tabular-nums; }
+.save-status { font-size: 13px; }
+#score .selected path, #score .selected rect { fill: #1565c0 !important; stroke: #1565c0 !important; }
+.edit-panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px 14px 0 0; padding: 8px 10px; box-shadow: 0 -4px 14px rgba(0,0,0,.08); }
+.edit-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.edit-head b { flex: 1; font-size: 15px; }
+.edit-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0; }
+.edit-panel button { font: inherit; font-size: 14px; padding: 7px 10px; border-radius: 9px; border: 1px solid var(--border); background: #f4f6fa; cursor: pointer; min-height: 38px; }
+.edit-panel button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.edit-panel button.danger { color: var(--danger); }
+.edit-panel button:disabled { opacity: .45; }
+.edit-panel select { min-height: 38px; padding: 4px 8px; }
+
+.lang-btn { border: 1px solid var(--border); background: var(--card); border-radius: 10px; height: 38px; padding: 0 10px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+/* פאנל עריכה קומפקטי: שורת כפתורים אחת שגוללת הצידה */
+.edit-row { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+.edit-row > * { flex: 0 0 auto; }
+.edit-panel button { padding: 6px 9px; min-height: 36px; white-space: nowrap; }
+.edit-head b { font-size: 14px; line-height: 1.3; }

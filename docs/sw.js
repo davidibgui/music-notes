@@ -1,10 +1,10 @@
 // Service worker: שמירת קבצי האפליקציה כדי שתיפתח מהר (גם בלי רשת).
 // בכל שינוי בקבצים - להעלות את מספר הגרסה.
-const CACHE = 'music-notes-v4';
+const CACHE = 'music-notes-v6';
 const ASSETS = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
-  'js/app.js', 'js/audio.js', 'js/analyzer.js', 'js/score.js', 'js/render.js', 'js/chords.js', 'js/pdf.js',
-  'lib/vexflow.js', 'lib/jspdf.umd.min.js', 'lib/basic-pitch.bundle.js',
+  'js/app.js', 'js/i18n.js', 'js/audio.js', 'js/analyzer.js', 'js/edit.js', 'js/store.js', 'js/cloud.js', 'js/cloud-config.js', 'js/score.js', 'js/render.js', 'js/chords.js', 'js/pdf.js',
+  'lib/vexflow.js', 'lib/jspdf.umd.min.js', 'lib/basic-pitch.bundle.js', 'lib/supabase.js',
   'model/model.json', 'model/group1-shard1of1.bin',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png',
 ];

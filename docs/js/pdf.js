@@ -37,13 +37,13 @@ function flatten(canvas) {
   return out;
 }
 
-function header(raw, title, info) {
+function header(raw, title, info, rtl) {
   raw.save();
   raw.fillStyle = '#111';
   raw.textAlign = 'center';
-  raw.direction = 'rtl';
+  raw.direction = rtl ? 'rtl' : 'ltr';
   raw.font = 'bold 26px Arial, sans-serif';
-  raw.fillText(title || 'שיר ללא שם', PAGE_W / 2, 52);
+  raw.fillText(title || '', PAGE_W / 2, 52);
   raw.font = '14px Arial, sans-serif';
   raw.fillStyle = '#444';
   raw.fillText(info, PAGE_W / 2, 78);
@@ -60,7 +60,7 @@ function footer(raw, pageNo, total) {
   raw.restore();
 }
 
-export async function exportPdf(score, { title, info, fileName }) {
+export async function exportPdf(score, { title, info, fileName, rtl = true }) {
   const width = PAGE_W - 40;
   const systems = layoutSystems(score, width);
   const sysH = systemHeight(score);
@@ -90,7 +90,7 @@ export async function exportPdf(score, { title, info, fileName }) {
     const { canvas, ctx, raw } = newPage();
     let y = MARGIN_TOP;
     if (i === 0) {
-      y = header(raw, title, info);
+      y = header(raw, title, info, rtl);
       y = drawChordDiagrams(ctx, score, width, y);
     }
     // הזזה אופקית קטנה לשוליים
