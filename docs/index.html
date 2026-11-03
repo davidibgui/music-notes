@@ -18,7 +18,7 @@
 <body>
   <header class="topbar">
     <h1>🎼 תווים</h1>
-    <span id="serverStatus" class="pill" title="מצב שרת העיבוד">בודק שרת…</span>
+    <span id="serverStatus" class="pill" title="מצב מנוע הזיהוי">טוען…</span>
   </header>
 
   <main>
@@ -59,7 +59,7 @@
           <li>הכי טוב: כלי אחד, בלי רעש רקע, הטלפון קרוב לכלי.</li>
           <li>בהקלטה של שיר שלם עם תופים וזמר, התוצאה פחות מדויקת. אז כדאי לבחור "מנגינה" בלבד.</li>
           <li>קטעים קצרים (עד 2–3 דקות) מעובדים מהר יותר.</li>
-          <li>בפעם הראשונה ביום השרת "מתעורר" וזה יכול לקחת דקה-שתיים.</li>
+          <li>הכול נעשה בתוך המכשיר. ההקלטות לא נשלחות לשום מקום.</li>
         </ul>
       </details>
     </section>
@@ -96,7 +96,8 @@
     <section id="processing" class="screen" hidden>
       <div class="spinner"></div>
       <p id="procMsg">מעבד…</p>
-      <p class="muted">אפשר להשאיר את המסך פתוח. זה לוקח בדרך כלל חצי דקה עד דקה.</p>
+      <div class="meter proc"><div id="procBar"></div></div>
+      <p class="muted">העיבוד נעשה בתוך הטלפון. השאירו את המסך פתוח עד הסוף.</p>
     </section>
 
     <!-- מסך תוצאה -->

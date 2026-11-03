@@ -1,10 +1,11 @@
 // Service worker: שמירת קבצי האפליקציה כדי שתיפתח מהר (גם בלי רשת).
 // בכל שינוי בקבצים - להעלות את מספר הגרסה.
-const CACHE = 'tavim-v1';
+const CACHE = 'music-notes-v2';
 const ASSETS = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
-  'js/app.js', 'js/audio.js', 'js/config.js', 'js/score.js', 'js/render.js', 'js/chords.js', 'js/pdf.js',
-  'lib/vexflow.js', 'lib/jspdf.umd.min.js',
+  'js/app.js', 'js/audio.js', 'js/analyzer.js', 'js/score.js', 'js/render.js', 'js/chords.js', 'js/pdf.js',
+  'lib/vexflow.js', 'lib/jspdf.umd.min.js', 'lib/basic-pitch.bundle.js',
+  'model/model.json', 'model/group1-shard1of1.bin',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];
 

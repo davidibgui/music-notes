@@ -1,5 +1,5 @@
-// הקלטה מהמיקרופון (כולל אייפון/ספארי) ושליחה לשרת.
-import { serverUrl, MAX_RECORD_SECONDS } from './config.js';
+// הקלטה מהמיקרופון (כולל אייפון/ספארי).
+import { MAX_SECONDS as MAX_RECORD_SECONDS } from './analyzer.js';
 
 function pickMime() {
   const types = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg'];
@@ -78,41 +78,4 @@ export function extFor(type) {
   if (type.includes('wav')) return 'wav';
   if (type.includes('mpeg') || type.includes('mp3')) return 'mp3';
   return 'audio';
-}
-
-export async function pingServer(timeoutMs = 90000) {
-  const ctl = new AbortController();
-  const t = setTimeout(() => ctl.abort(), timeoutMs);
-  try {
-    const r = await fetch(serverUrl() + '/health', { signal: ctl.signal, cache: 'no-store' });
-    return r.ok;
-  } catch {
-    return false;
-  } finally {
-    clearTimeout(t);
-  }
-}
-
-export async function analyzeAudio(blob, fileName, { sensitivity = 0.5 } = {}) {
-  const fd = new FormData();
-  fd.append('file', blob, fileName);
-  fd.append('sensitivity', String(sensitivity));
-  const ctl = new AbortController();
-  const t = setTimeout(() => ctl.abort(), 6 * 60 * 1000);
-  let r;
-  try {
-    r = await fetch(serverUrl() + '/analyze', { method: 'POST', body: fd, signal: ctl.signal });
-  } catch (e) {
-    throw new Error(e.name === 'AbortError'
-      ? 'העיבוד לקח יותר מדי זמן. נסו קטע קצר יותר.'
-      : 'אין חיבור לשרת העיבוד. בדקו אינטרנט ונסו שוב (בפעם הראשונה השרת יכול לקחת דקה-שתיים להתעורר).');
-  } finally {
-    clearTimeout(t);
-  }
-  if (!r.ok) {
-    let msg = `שגיאה מהשרת (${r.status})`;
-    try { const j = await r.json(); if (j.detail) msg = j.detail; } catch { /* ignore */ }
-    throw new Error(msg);
-  }
-  return r.json();
 }

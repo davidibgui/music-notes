@@ -5,6 +5,7 @@
 
 ## מה יש בשלב 1
 - 🎤 הקלטה מהמיקרופון (כולל אייפון) · 📁 העלאת MP3 / WAV / M4A
+- 🔒 העיבוד נעשה בתוך הטלפון, בלי שרת
 - 🎸 גיטרה: חמשה (מפתח סול עם 8 למטה) + טאבים + דיאגרמות אקורדים
 - 🎹 פסנתר: חמשה כפולה (יד ימין/שמאל)
 - תצוגת "מנגינה" (התו העליון) או "הכול"
@@ -13,47 +14,40 @@
 - יצוא PDF בדפדפן (באייפון נפתחת חלונית שיתוף: שמירה לקבצים, וואטסאפ, הדפסה)
 - השיר האחרון נשמר במכשיר
 
-## מבנה
+## איך זה עובד
+**הכול רץ בתוך הדפדפן, בלי שרת.** מודל Basic Pitch של Spotify (גרסת TF.js) מזהה את התווים בתוך הטלפון.
+מאותו פלט מחושבים גם הקצב (מעקב פעמות), האקורדים והסולם.
+ההקלטות לא נשלחות לשום מקום, והכול חינמי לגמרי: רק GitHub Pages.
+
 ```
-docs/      האפליקציה (צד לקוח) - מתפרסמת ב-GitHub Pages
-  js/score.js    כימות לתיבות, מנגינה/מלא, טאבים
-  js/render.js   ציור עם VexFlow
-  js/pdf.js      יצוא PDF (jsPDF)
-  js/audio.js    הקלטה ושליחה לשרת
-  js/config.js   כתובת השרת  ← לעדכן!
-server/    שרת העיבוד - Hugging Face Spaces (Docker)
-  analysis.py    Basic Pitch (תווים) + librosa (קצב, סולם, אקורדים)
-  app.py         FastAPI: POST /analyze
+docs/              האפליקציה - מתפרסמת ב-GitHub Pages
+  js/analyzer.js   זיהוי: Basic Pitch + פעמות/טמפו + אקורדים + סולם
+  js/score.js      כימות לתיבות, מנגינה/מלא, טאבים
+  js/render.js     ציור תווים עם VexFlow
+  js/pdf.js        יצוא PDF (jsPDF)
+  js/audio.js      הקלטה מהמיקרופון
+  model/           המודל של Basic Pitch (כ-0.9MB)
+  lib/             ספריות (VexFlow, jsPDF, TF.js + Basic Pitch)
 ```
 
-השרת מחזיר נתונים גולמיים (שניות ופעמות). הכימות והציור נעשים בדפדפן, כך שהחלפת כלי או תצוגה לא שולחת שוב בקשה לשרת.
+> למה בלי שרת? Hugging Face הפסיקו לתת Spaces מסוג Docker/Gradio בחינם, לכן העיבוד עבר לדפדפן.
 
-## התקנה (פעם אחת, הכול בחינם)
+## התקנה (פעם אחת)
 
-### 1. שרת העיבוד ב-Hugging Face
-1. נרשמים ב-https://huggingface.co (חינם).
-2. **New Space**: שם `music-notes-server`, SDK: **Docker** (Blank), חומרה: **CPU basic (free)**, ציבורי.
-3. בלשונית **Files** של ה-Space: **Add file → Upload files**, ומעלים את כל הקבצים מתיקיית `server/`: `Dockerfile`, `app.py`, `analysis.py`, `requirements.txt`, `README.md`.
-4. מחכים שהבנייה תסתיים (כ-5–10 דקות) ושהמצב יהיה **Running**.
-5. כתובת השרת תהיה: `https://<שם-המשתמש>-music-notes-server.hf.space`.
-   בודקים בדפדפן: `.../health` אמור להחזיר `{"ok":true}`.
-
-> שם המשתמש ב-Hugging Face הוא `davidibgui1952`. אם משתנה, צריך לעדכן את הכתובת ב-`docs/js/config.js`.
-> אם כתובת האתר ב-GitHub Pages שונה, מוסיפים אותה ב-Space: **Settings → Variables**: `ALLOWED_ORIGINS` = `https://<user>.github.io`.
-
-### 2. האפליקציה ב-GitHub Pages
-1. בריפו (ציבורי): **Settings → Pages**.
+### 1. הפעלת האתר ב-GitHub Pages
+1. בריפו: **Settings → Pages**.
 2. Source: **Deploy from a branch**, Branch: `main`, Folder: **`/docs`**, ואז **Save**.
-3. אחרי כדקה האתר יהיה זמין ב: https://davidibgui.github.io/music-notes/
+3. אחרי דקה-שתיים האתר זמין ב: https://davidibgui.github.io/music-notes/
 
-### 3. התקנה באייפון
-פותחים את הכתובת ב**ספארי**, לוחצים על **שיתוף** ואז על **הוספה למסך הבית**. האפליקציה תופיע כמו אפליקציה רגילה.
+### 2. התקנה באייפון
+פותחים את הכתובת ב**ספארי**, לוחצים על **שיתוף** ואז על **הוספה למסך הבית**.
 
 ## הערות
-- השרת החינמי "נרדם" אחרי 48 שעות בלי שימוש. הפנייה הראשונה מעירה אותו, וזה לוקח 1–2 דקות. האפליקציה מציגה את המצב בפינה.
+- בפתיחה הראשונה נטענים כ-3MB (המודל והספריות). אחר כך הם נשמרים במכשיר.
+- העיבוד משתמש במעבד הגרפי (WebGL). אם הוא לא זמין, העיבוד עובר אוטומטית למעבד הרגיל, וזה איטי יותר.
 - הדיוק הכי טוב מתקבל עם כלי אחד והקלטה נקייה. בשיר מלא עם תופים וזמר התוצאה היא בעיקר נקודת התחלה לעריכה.
 - מגבלות: עד 25MB לקובץ ועד 6 דקות.
-- בדיקה מקומית: `python -m http.server 8000` בתוך `docs/`, ופותחים `http://localhost:8000/?server=http://localhost:7860`.
+- בדיקה מקומית: `python -m http.server 8000` בתוך `docs/`, ופותחים http://localhost:8000
 
 ## שלב 2 (בהמשך)
 - עריכה: תיקון תווים ואקורדים, שינוי טמפו, טרנספוזיציה (מבנה הנתונים כבר תומך: `transpose` ב-`score.js`)
@@ -61,4 +55,4 @@ server/    שרת העיבוד - Hugging Face Spaces (Docker)
 - קישור YouTube
 
 ## רישיונות
-VexFlow ו-jsPDF תחת רישיון MIT (ב-`docs/lib`). מודל Basic Pitch של Spotify תחת Apache-2.0.
+VexFlow ו-jsPDF תחת רישיון MIT. Basic Pitch של Spotify ו-TensorFlow.js תחת Apache-2.0 (הרישיונות ב-`docs/lib`).

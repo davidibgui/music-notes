@@ -1,5 +1,6 @@
 // ממשק המשתמש הראשי.
-import { Recorder, analyzeAudio, pingServer, extFor } from './audio.js';
+import { Recorder, extFor } from './audio.js';
+import { analyze, loadEngine } from './analyzer.js';
 import { buildScore, DEFAULT_SETTINGS } from './score.js';
 import { renderToElement } from './render.js';
 import { exportPdf } from './pdf.js';
@@ -42,15 +43,20 @@ function toast(msg, isError = false, ms = 5000) {
   toastTimer = setTimeout(() => { t.hidden = true; }, ms);
 }
 
-// ---------- מצב השרת ----------
-async function checkServer() {
+// ---------- טעינת מנוע הזיהוי (פעם אחת, אחר כך נשמר במטמון) ----------
+async function prepareEngine() {
   const pill = $('serverStatus');
-  pill.textContent = 'השרת מתעורר…';
+  pill.textContent = 'טוען מנוע…';
   pill.className = 'pill wait';
-  const ok = await pingServer();
-  pill.textContent = ok ? 'השרת מוכן' : 'השרת לא זמין';
-  pill.className = 'pill ' + (ok ? 'ok' : 'bad');
-  return ok;
+  try {
+    await loadEngine();
+    pill.textContent = 'מוכן';
+    pill.className = 'pill ok';
+  } catch (e) {
+    console.error(e);
+    pill.textContent = 'שגיאה בטעינה';
+    pill.className = 'pill bad';
+  }
 }
 
 // ---------- כפתורי בחירה (segmented) ----------
@@ -98,7 +104,6 @@ $('btnRecord').addEventListener('click', async () => {
     $('recTime').textContent = '0:00';
     await recorder.start();
     show('recording');
-    checkServer(); // מעירים את השרת כבר עכשיו
   } catch (e) {
     recorder = null;
     const msg = e.name === 'NotAllowedError'
@@ -136,7 +141,6 @@ $('fileInput').addEventListener('change', (e) => {
   if (f.size > 25 * 1024 * 1024) { toast('הקובץ גדול מדי (מקסימום 25MB)', true); return; }
   const title = f.name.replace(/\.[^.]+$/, '');
   setAudio(f, f.name, title);
-  checkServer();
 });
 
 function setAudio(blob, name, title) {
@@ -155,13 +159,16 @@ $('btnBackHome').addEventListener('click', () => show('home'));
 $('btnAnalyze').addEventListener('click', async () => {
   if (!state.audio) return;
   show('processing');
-  const msgs = ['מעלה את הקובץ…', 'מזהה תווים…', 'מזהה אקורדים וקצב…', 'עוד רגע…'];
-  let i = 0;
-  $('procMsg').textContent = msgs[0];
-  const timer = setInterval(() => { i = Math.min(i + 1, msgs.length - 1); $('procMsg').textContent = msgs[i]; }, 8000);
+  const labels = { load: 'טוען מנוע זיהוי…', decode: 'קורא את ההקלטה…', notes: 'מזהה תווים', harmony: 'מזהה אקורדים וקצב…', done: 'מסיים…' };
+  const onProgress = (stage, f) => {
+    $('procMsg').textContent = labels[stage] + (stage === 'notes' ? ` ${Math.round(f * 100)}%` : '');
+    $('procBar').style.width = Math.round((stage === 'notes' ? 0.1 + 0.8 * f : { load: 0, decode: 0.05, harmony: 0.92, done: 1 }[stage]) * 100) + '%';
+  };
+  onProgress('load', 0);
   try {
-    const analysis = await analyzeAudio(state.audio.blob, state.audio.name, {
+    const analysis = await analyze(state.audio.blob, {
       sensitivity: Number($('sensitivity').value),
+      onProgress,
     });
     if (!analysis.notes?.length && !analysis.chords?.some((c) => c.label !== 'N')) {
       throw new Error('לא זוהו צלילים בהקלטה. נסו להקליט קרוב יותר לכלי.');
@@ -172,8 +179,6 @@ $('btnAnalyze').addEventListener('click', async () => {
   } catch (e) {
     toast(e.message || 'משהו השתבש', true, 8000);
     show('preview');
-  } finally {
-    clearInterval(timer);
   }
 });
 
@@ -262,7 +267,7 @@ $('btnOpenLast').addEventListener('click', () => {
 // ---------- התחלה ----------
 syncSegs();
 refreshLast();
-checkServer();
+prepareEngine();
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
